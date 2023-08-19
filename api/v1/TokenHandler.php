@@ -11,17 +11,14 @@ use Firebase\JWT\Key;
 
 $key = JWT_SECRET_KEY; // This should be kept safe and not exposed!
 
-class TokenHandler
-{
+class TokenHandler{
     private $con;
-    public function __construct()
-    {
+    public function __construct(){
         require_once dirname(__FILE__) . '/DbConnect.php';
         date_default_timezone_set('Asia/Dhaka');
 
         $db = new DbConnect();
         $this->con = $db->connect();
-
     }
 
     function createJWT($userId, $phone, $email, $role) {
@@ -48,7 +45,7 @@ class TokenHandler
             $tokenString = str_replace('Bearer ', '', $token);
             $decodedToken = JWT::decode($tokenString, new Key($key, 'HS256'));
             $token_user_id = $decodedToken->id;
-            $token_user_role = $decodedToken->id;
+            $token_user_role = $decodedToken->role;
             // Prepare the SQL with placeholders to prevent SQL injection
             $stmt = null;
             if ($token_user_role == 'user') {
@@ -71,6 +68,19 @@ class TokenHandler
         } catch (Exception $e) {
             // Token is invalid or expired
             return false;
+        }
+    }
+
+    function decodeToken($token) {
+        global $key;
+
+        try {
+            // Remove Bearer prefix if it exists
+            $tokenString = str_replace('Bearer ', '', $token);
+            return JWT::decode($tokenString, new Key($key, 'HS256'));
+        } catch (Exception $e) {
+            // Token is invalid or expired
+            return null;
         }
     }
 

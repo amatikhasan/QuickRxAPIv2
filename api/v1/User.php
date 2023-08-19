@@ -290,35 +290,48 @@ if (isset($_GET['call'])) {
             break;
 
         case 'update':
+            $headers = getallheaders();
+            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
+            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
+            if ($jwtToken) {
+                $tokenHandler = new TokenHandler();
+                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-            if ($_SERVER['REQUEST_METHOD'] == "POST") {
+                if ($isTokenValid) {
+                    if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
-                $id = $_POST['id'];
-                $name = $_POST['name'];
-                $phone = $_POST['phone'];
-                $email = $_POST['email'];
-                $password = $_POST['password'];
-                $dob = $_POST['dob'];
-                $reg_number = $_POST['reg_number'];
+                        $id = $_POST['id'];
+                        $name = $_POST['name'];
+                        $phone = $_POST['phone'];
+                        $email = $_POST['email'];
+                        $password = $_POST['password'];
+                        $dob = $_POST['dob'];
+                        $reg_number = $_POST['reg_number'];
 
-                $user_data = array("id" => $id, "name" => $name, "phone" => $phone, "email" => $email, "password" => $password, "dob" => $dob, "reg_number" => $reg_number);
+                        $user_data = array("id" => $id, "name" => $name, "phone" => $phone, "email" => $email, "password" => $password, "dob" => $dob, "reg_number" => $reg_number);
 
 
-                $save = new UserHandler();
-                $result = $save->updateUser($user_data);
+                        $save = new UserHandler();
+                        $result = $save->updateUser($user_data);
 
-                if ($result == "updated") {
-                    $response['error'] = false;
-                    $response['response'] = 'Updated Successfully!';
+                        if ($result == "updated") {
+                            $response['error'] = false;
+                            $response['response'] = 'Updated Successfully!';
+                        } else {
+                            $response['error'] = true;
+                            $response['response'] = 'Something went wrong!';
+                        }
+
+
+                    } else {
+                        $response['error'] = true;
+                        $response['response'] = 'Error, Please Try Again!';
+                    }
                 } else {
-                    $response['error'] = true;
-                    $response['response'] = 'Something went wrong!';
+                    http_response_code(401);
                 }
-
-
             } else {
-                $response['error'] = true;
-                $response['response'] = 'Error, Please Try Again!';
+                http_response_code(401);
             }
 
             break;
@@ -404,32 +417,45 @@ if (isset($_GET['call'])) {
             break;
 
         case 'updateProfileImage':
+            $headers = getallheaders();
+            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
+            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
+            if ($jwtToken) {
+                $tokenHandler = new TokenHandler();
+                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-            if (isset($_POST['id']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-                $db = new UserHandler();
+                if ($isTokenValid) {
+                    if (isset($_POST['id']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+                        $db = new UserHandler();
 
-                $id = $_POST['id'];
-                $file = $_FILES['file']['tmp_name'];
+                        $id = $_POST['id'];
+                        $file = $_FILES['file']['tmp_name'];
 
-                $fileExt = getFileExtension($_FILES['file']['name']);
+                        $fileExt = getFileExtension($_FILES['file']['name']);
 
-                $result = $db->updateProfileImage($id, $file, $fileExt);
+                        $result = $db->updateProfileImage($id, $file, $fileExt);
 
 
-                if ($result == "updated") {
-                    $response['error'] = false;
-                    $response['response'] = 'Updated Successfully!';
+                        if ($result == "updated") {
+                            $response['error'] = false;
+                            $response['response'] = 'Updated Successfully!';
+                        } else {
+                            $response['error'] = true;
+                            $response['response'] = 'Something went wrong!';
+                        }
+
+
+                    } else {
+                        $id = $_POST['id'];
+                        $file = $_FILES['file']['tmp_name'];
+                        $response['error'] = true;
+                        $response['response'] = 'Error, Please Try Again!';
+                    }
                 } else {
-                    $response['error'] = true;
-                    $response['response'] = 'Something went wrong!';
+                    http_response_code(401);
                 }
-
-
             } else {
-                $id = $_POST['id'];
-                $file = $_FILES['file']['tmp_name'];
-                $response['error'] = true;
-                $response['response'] = 'Error, Please Try Again!';
+                http_response_code(401);
             }
 
             break;
@@ -515,12 +541,9 @@ if (isset($_GET['call'])) {
     }
 }
 
-function getFileExtension($file)
-{
+function getFileExtension($file){
     $path_parts = pathinfo($file);
     return $path_parts['extension'];
 }
 
 echo json_encode($response);
-
-?>

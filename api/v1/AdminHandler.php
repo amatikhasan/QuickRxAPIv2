@@ -3,37 +3,25 @@
 require_once dirname(__FILE__) . '/MySqliStmt.php';
 require_once dirname(__FILE__) . '/Constants.php';
 require_once dirname(__FILE__) . '/TokenHandler.php';
+require_once dirname(__FILE__) . '/PasswordHelper.php';
 
-class AdminHandler
-{
-
+class AdminHandler{
     private $con;
 
-    public function __construct()
-    {
+    public function __construct(){
         require_once dirname(__FILE__) . '/DbConnect.php';
         date_default_timezone_set('Asia/Dhaka');
 
         $db = new DbConnect();
         $this->con = $db->connect();
-
     }
 
-    public function login($username, $password)
-    {
+    public function login($username, $password){
         $now = new DateTime();
         $updated_at = $now->format("d M, Y h:i A");
 
-        $ciphering = "AES-128-CTR";
-        $iv_length = openssl_cipher_iv_length($ciphering);
-        $options = 0;
-
-        // Non-NULL Initialization Vector for encryption
-        //$encryption_iv = openssl_random_pseudo_bytes($iv_length); // Generate a random IV
-        $encryption_iv = '1234567891011121';
-        $encryption_key = "quickrx";
-
-        $encryptedPassword = openssl_encrypt($password, $ciphering, $encryption_key, $options, $encryption_iv);
+        $passwordHelper = new PasswordHelper();
+        $encryptedPassword = $passwordHelper->encryptPassword($password);
 
         $stmt = $this->con->prepare("SELECT * FROM admin WHERE username=? AND password=? LIMIT 1");
         $stmt->bind_param("ss", $username, $encryptedPassword);
@@ -65,27 +53,16 @@ class AdminHandler
         return $jwtToken;
     }
 
-    public function updatePassword($id, $password)
-    {
+    public function updatePassword($password, $token){
         $now = new DateTime();
         $updated_at = $now->format("d M, Y h:i A");
 
-        // Store the cipher method
-        $ciphering = "AES-128-CTR";
+        $passwordHelper = new PasswordHelper();
+        $encryptedPassword = $passwordHelper->encryptPassword($password);
 
-        // Use OpenSSl Encryption method
-        $iv_length = openssl_cipher_iv_length($ciphering);
-        $options = 0;
-
-        // Non-NULL Initialization Vector for encryption
-        $encryption_iv = '1234567891011121';
-
-        // Store the encryption key
-        $encryption_key = "quickrx";
-
-        // Use openssl_encrypt() function to encrypt the data
-        $encryptedPassword = openssl_encrypt($password, $ciphering,
-            $encryption_key, $options, $encryption_iv);
+        $tokenHandler= new TokenHandler();
+        $decodedToken = $tokenHandler->decodeToken($token);
+        $id = $decodedToken->id;
 
         $stmt = $this->con->prepare("UPDATE admin SET password=?, updated_at=? WHERE id=?");
         $stmt->bind_param("ssi", $encryptedPassword,$updated_at, $id);
@@ -101,5 +78,3 @@ class AdminHandler
     }
 
 }
-
-?>

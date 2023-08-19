@@ -1,6 +1,5 @@
 <?php
 
-
 require_once dirname(__FILE__) . '/AdminHandler.php';
 require_once dirname(__FILE__) . '/TokenHandler.php';
 
@@ -27,7 +26,6 @@ if (isset($_GET['call'])) {
                     $response['error'] = true;
                     $response['response'] = 'Error, Please Try Again!';
                 }
-
             } else {
                 $response['error'] = true;
                 $response['response'] = 'Error, Please Try Again!';
@@ -36,56 +34,44 @@ if (isset($_GET['call'])) {
             break;
 
         case 'updatePassword':
+            $headers = getallheaders();
+            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
 
-            if ($_SERVER['REQUEST_METHOD'] == "POST") {
+            if ($jwtToken) {
+                $tokenHandler = new TokenHandler();
+                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                $id = $_POST['id'];
-                $password = $_POST['password'];
+                if ($isTokenValid) {
+                    if ($_SERVER['REQUEST_METHOD'] == "POST") {
+                        $password = $_POST['password'];
+                        $save = new AdminHandler();
+                        $result = $save->updatePassword($password, $jwtToken);
 
-
-                $save = new AdminHandler();
-                $result = $save->updatePassword($id, $password);
-
-                if ($result == "updated") {
-                    $response['error'] = false;
-                    $response['response'] = 'Password changed Successfully!';
+                        if ($result == "updated") {
+                            $response['error'] = false;
+                            $response['response'] = 'Password changed Successfully!';
+                        } else {
+                            $response['error'] = true;
+                            $response['response'] = 'Old Password is wrong!';
+                        }
+                    } else {
+                        $response['error'] = true;
+                        $response['response'] = 'Error, Please Try Again!';
+                    }
                 } else {
-                    $response['error'] = true;
-                    $response['response'] = 'Old Password is wrong!';
+                    http_response_code(401);
                 }
-
-
             } else {
-                $response['error'] = true;
-                $response['response'] = 'Error, Please Try Again!';
+                http_response_code(401);
             }
 
             break;
-
-    }
-}
-
-if (isset($_GET['get'])) {
-    switch ($_GET['get']) {
-
-        case 'info':
-
-            $db = new ApplicationHandler();
-            $result = $db->getAppInfo();
-
-            $response = $result;
-
-            break;
-
     }
 }
 
 echo json_encode($response);
 
-function getFileExtension($file)
-{
+function getFileExtension($file){
     $path_parts = pathinfo($file);
     return $path_parts['extension'];
 }
-
-?>

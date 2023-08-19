@@ -2,23 +2,19 @@
 
 require_once dirname(__FILE__) . '/MySqliStmt.php';
 
-class PaymentHandler
-{
+class PaymentHandler{
 
     private $con;
     
-    public function __construct()
-    {
+    public function __construct(){
         require_once dirname(__FILE__) . '/DbConnect.php';
         date_default_timezone_set('Asia/Dhaka');
 
         $db = new DbConnect();
         $this->con = $db->connect();
-
     }
 
-    public function createPayment($payment_data)
-    {
+    public function createPayment($payment_data){
         $user_id=$payment_data['$user_id'];
         $amount=$payment_data['amount'];
         $method=$payment_data['method'];
@@ -40,8 +36,7 @@ class PaymentHandler
         return "error";
     }
     
-    public function updatePayment($payment_data)
-    {
+    public function updatePayment($payment_data){
         $user_id=$payment_data['user_id'];
         $amount=$payment_data['amount'];
         $method=$payment_data['method'];
@@ -62,8 +57,7 @@ class PaymentHandler
         return "error";
     }
 
-    public function getAllPayment()
-    {
+    public function getAllPayment(){
         $stmt = $this->con->prepare("SELECT payment.*,users.name AS user_name FROM payment LEFT JOIN users ON payment.user_id=users.id ORDER BY payment.id DESC");
         $stmt->execute();
         //$result = $stmt -> get_result();
@@ -84,5 +78,3 @@ class PaymentHandler
     }
 
 }
-
-?>

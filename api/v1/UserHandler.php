@@ -3,22 +3,20 @@
 require_once dirname(__FILE__) . '/MySqliStmt.php';
 require_once dirname(__FILE__) . '/Constants.php';
 require_once dirname(__FILE__) . '/TokenHandler.php';
+require_once dirname(__FILE__) . '/PasswordHelper.php';
 
 class UserHandler{
     private $con;
 
-    public function __construct()
-    {
+    public function __construct(){
         require_once dirname(__FILE__) . '/DbConnect.php';
         date_default_timezone_set('Asia/Dhaka');
 
         $db = new DbConnect();
         $this->con = $db->connect();
-
     }
 
-    public function isUserAvailable($email, $phone)
-    {
+    public function isUserAvailable($email, $phone){
 
         $stmt = $this->con->prepare("SELECT id FROM users WHERE email='$email' OR phone='$phone'");
         $stmt->execute();
@@ -32,8 +30,7 @@ class UserHandler{
         }
     }
 
-    public function isAccountRegistered($phone)
-    {
+    public function isAccountRegistered($phone){
         $stmt = $this->con->prepare("SELECT id FROM users WHERE phone='$phone'");
         $stmt->execute();
         $stmt->bind_result($id);
@@ -46,24 +43,9 @@ class UserHandler{
         }
     }
 
-    public function login($emailOrPhone, $password)
-    {
-        // Store the cipher method
-        $ciphering = "AES-128-CTR";
-
-        // Use OpenSSl Encryption method
-        $iv_length = openssl_cipher_iv_length($ciphering);
-        $options = 0;
-
-        // Non-NULL Initialization Vector for encryption
-        $encryption_iv = '1234567891011121';
-
-        // Store the encryption key
-        $encryption_key = "quickrx";
-
-        // Use openssl_encrypt() function to encrypt the data
-        $encryptedPassword = openssl_encrypt($password, $ciphering,
-            $encryption_key, $options, $encryption_iv);
+    public function login($emailOrPhone, $password){
+        $passwordHelper = new PasswordHelper();
+        $encryptedPassword = $passwordHelper->encryptPassword($password);
 
         $stmt = $this->con->prepare("SELECT * FROM users WHERE (email='$emailOrPhone' OR phone='$emailOrPhone' OR phone LIKE '%$emailOrPhone') AND password='$encryptedPassword'");
         $stmt->execute();
@@ -77,21 +59,12 @@ class UserHandler{
         }
     }
 
-    public function loginReturnsToken($emailOrPhone, $password)
-    {
+    public function loginReturnsToken($emailOrPhone, $password){
         $now = new DateTime();
         $updated_at = $now->format("d M, Y h:i A");
 
-        $ciphering = "AES-128-CTR";
-        $iv_length = openssl_cipher_iv_length($ciphering);
-        $options = 0;
-
-        // Non-NULL Initialization Vector for encryption
-        //$encryption_iv = openssl_random_pseudo_bytes($iv_length); // Generate a random IV
-        $encryption_iv = '1234567891011121';
-        $encryption_key = "quickrx";
-
-        $encryptedPassword = openssl_encrypt($password, $ciphering, $encryption_key, $options, $encryption_iv);
+        $passwordHelper = new PasswordHelper();
+        $encryptedPassword = $passwordHelper->encryptPassword($password);
 
         // Use prepared statements properly
         $stmt = $this->con->prepare("SELECT * FROM users WHERE (email=? OR phone=? OR phone LIKE ?) AND password=? LIMIT 1");
@@ -124,8 +97,7 @@ class UserHandler{
         return $jwtToken;
     }
 
-    public function refreshToken($emailOrPhone, $password)
-    {
+    public function refreshToken($emailOrPhone, $password){
         $now = new DateTime();
         $updated_at = $now->format("d M, Y h:i A");
 
@@ -160,28 +132,11 @@ class UserHandler{
         return $jwtToken;
     }
 
-
-    public function loginReturnUserDetails($emailOrPhone, $password)
-    {
-
+    public function loginReturnUserDetails($emailOrPhone, $password){
         $user = array();
 
-        // Store the cipher method
-        $ciphering = "AES-128-CTR";
-
-        // Use OpenSSl Encryption method
-        $iv_length = openssl_cipher_iv_length($ciphering);
-        $options = 0;
-
-        // Non-NULL Initialization Vector for encryption
-        $encryption_iv = '1234567891011121';
-
-        // Store the encryption key
-        $encryption_key = "quickrx";
-
-        // Use openssl_encrypt() function to encrypt the data
-        $encryptedPassword = openssl_encrypt($password, $ciphering,
-            $encryption_key, $options, $encryption_iv);
+        $passwordHelper = new PasswordHelper();
+        $encryptedPassword = $passwordHelper->encryptPassword($password);
 
         $stmt = $this->con->prepare("SELECT * FROM users WHERE (email='$emailOrPhone' OR phone='$emailOrPhone' OR phone LIKE '%$emailOrPhone') AND password='$encryptedPassword'");
 
@@ -198,9 +153,7 @@ class UserHandler{
         return $user;
     }
 
-    public function createUser($user_data)
-    {
-
+    public function createUser($user_data){
         $name = $user_data['name'];
         $phone = $user_data['phone'];
         $firebase_uid = $user_data['firebase_uid'];
@@ -215,22 +168,8 @@ class UserHandler{
         $created_at = $now->format("d M, Y h:i A");
         $updated_at = $created_at;
 
-        // Store the cipher method
-        $ciphering = "AES-128-CTR";
-
-        // Use OpenSSl Encryption method
-        $iv_length = openssl_cipher_iv_length($ciphering);
-        $options = 0;
-
-        // Non-NULL Initialization Vector for encryption
-        $encryption_iv = '1234567891011121';
-
-        // Store the encryption key
-        $encryption_key = "quickrx";
-
-        // Use openssl_encrypt() function to encrypt the data
-        $encryptedPassword = openssl_encrypt($password, $ciphering,
-            $encryption_key, $options, $encryption_iv);
+        $passwordHelper = new PasswordHelper();
+        $encryptedPassword = $passwordHelper->encryptPassword($password);
 
         $stmt = $this->con->prepare("INSERT INTO users (name,phone,email,firebase_uid,unique_id,password,dob,reg_number,account_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->bind_param("ssssssssiss", $name, $phone, $email, $firebase_uid, $unique_id, $encryptedPassword, $dob, $reg_number, $account_status, $created_at, $updated_at);
@@ -244,9 +183,7 @@ class UserHandler{
         return "error";
     }
 
-    public function createUserWithImage($file, $extension, $user_data)
-    {
-
+    public function createUserWithImage($file, $extension, $user_data){
         $name = $user_data['name'];
         $phone = $user_data['phone'];
         $email = $user_data['email'];
@@ -261,22 +198,8 @@ class UserHandler{
         $created_at = $now->format("d M, Y h:i A");
         $updated_at = $created_at;
 
-        // Store the cipher method
-        $ciphering = "AES-128-CTR";
-
-        // Use OpenSSl Encryption method
-        $iv_length = openssl_cipher_iv_length($ciphering);
-        $options = 0;
-
-        // Non-NULL Initialization Vector for encryption
-        $encryption_iv = '1234567891011121';
-
-        // Store the encryption key
-        $encryption_key = "quickrx";
-
-        // Use openssl_encrypt() function to encrypt the data
-        $encryptedPassword = openssl_encrypt($password, $ciphering,
-            $encryption_key, $options, $encryption_iv);
+        $passwordHelper = new PasswordHelper();
+        $encryptedPassword = $passwordHelper->encryptPassword($password);
 
         $user_image = round(microtime(true) * 1000) . '.' . $extension;
         $filedest = dirname(__FILE__) . IMAGES_UPLOAD_PATH . $user_image;
@@ -297,8 +220,7 @@ class UserHandler{
         return "error";
     }
 
-    public function getUserDetails($emailOrPhone)
-    {
+    public function getUserDetails($emailOrPhone){
         $user = array();
 
         $stmt = $this->con->prepare("SELECT * FROM users WHERE  email='$emailOrPhone' OR phone='$emailOrPhone' OR phone LIKE '%$emailOrPhone'");
@@ -308,14 +230,11 @@ class UserHandler{
         while ($row = $result->fetch_assoc()) {
             $user = $row;
         }
-
-
         $stmt->close();
         return $user;
     }
 
-    public function getAllUsers()
-    {
+    public function getAllUsers(){
         $stmt = $this->con->prepare("SELECT * FROM users ORDER BY id DESC");
         $stmt->execute();
         //$result = $stmt -> get_result();
@@ -335,9 +254,7 @@ class UserHandler{
         return $users;
     }
 
-    public function updateUser($user_data)
-    {
-
+    public function updateUser($user_data){
         $id = $user_data['id'];
         $name = $user_data['name'];
         $phone = $user_data['phone'];
@@ -349,22 +266,8 @@ class UserHandler{
         $now = new DateTime();
         $updated_at = $now->format("d M, Y h:i A");
 
-        // Store the cipher method
-        $ciphering = "AES-128-CTR";
-
-        // Use OpenSSl Encryption method
-        $iv_length = openssl_cipher_iv_length($ciphering);
-        $options = 0;
-
-        // Non-NULL Initialization Vector for encryption
-        $encryption_iv = '1234567891011121';
-
-        // Store the encryption key
-        $encryption_key = "quickrx";
-
-        // Use openssl_encrypt() function to encrypt the data
-        $encryptedPassword = openssl_encrypt($password, $ciphering,
-            $encryption_key, $options, $encryption_iv);
+        $passwordHelper = new PasswordHelper();
+        $encryptedPassword = $passwordHelper->encryptPassword($password);
 
         $stmt = null;
         if ($password != null) {
@@ -385,27 +288,12 @@ class UserHandler{
         return "error";
     }
 
-    public function updatePassword($id, $password)
-    {
+    public function updatePassword($id, $password){
         $now = new DateTime();
         $updated_at = $now->format("d M, Y h:i A");
 
-        // Store the cipher method
-        $ciphering = "AES-128-CTR";
-
-        // Use OpenSSl Encryption method
-        $iv_length = openssl_cipher_iv_length($ciphering);
-        $options = 0;
-
-        // Non-NULL Initialization Vector for encryption
-        $encryption_iv = '1234567891011121';
-
-        // Store the encryption key
-        $encryption_key = "quickrx";
-
-        // Use openssl_encrypt() function to encrypt the data
-        $encryptedPassword = openssl_encrypt($password, $ciphering,
-            $encryption_key, $options, $encryption_iv);
+        $passwordHelper = new PasswordHelper();
+        $encryptedPassword = $passwordHelper->encryptPassword($password);
 
         $stmt = $this->con->prepare("UPDATE users SET password=? WHERE id=?");
         $stmt->bind_param("si", $encryptedPassword, $id);
@@ -420,9 +308,7 @@ class UserHandler{
         return "error";
     }
 
-    public function updateUniqueId($id, $unique_id)
-    {
-
+    public function updateUniqueId($id, $unique_id){
         $now = new DateTime();
         $updated_at = $now->format("d M, Y h:i A");
 
@@ -442,9 +328,7 @@ class UserHandler{
         return "error";
     }
 
-    public function updateAccountStatusValue($id, $account_status)
-    {
-
+    public function updateAccountStatusValue($id, $account_status){
         $now = new DateTime();
         $updated_at = $now->format("d M, Y h:i A");
 
@@ -464,9 +348,7 @@ class UserHandler{
         return "error";
     }
 
-    public function updateAccountStatus($id, $account_status, $account_valid_from, $account_valid_until)
-    {
-
+    public function updateAccountStatus($id, $account_status, $account_valid_from, $account_valid_until){
         $now = new DateTime();
         $updated_at = $now->format("d M, Y h:i A");
 
@@ -485,9 +367,7 @@ class UserHandler{
         return "error";
     }
 
-    public function updateUserWithFile($file, $extension, $user_data)
-    {
-
+    public function updateUserWithFile($file, $extension, $user_data){
         $id = $user_data['id'];
         $name = $user_data['name'];
         $phone = $user_data['phone'];
@@ -501,22 +381,8 @@ class UserHandler{
         $created_at = $now->format("d M, Y h:i A");
         $updated_at = $created_at;
 
-        // Store the cipher method
-        $ciphering = "AES-128-CTR";
-
-        // Use OpenSSl Encryption method
-        $iv_length = openssl_cipher_iv_length($ciphering);
-        $options = 0;
-
-        // Non-NULL Initialization Vector for encryption
-        $encryption_iv = '1234567891011121';
-
-        // Store the encryption key
-        $encryption_key = "quickrx";
-
-        // Use openssl_encrypt() function to encrypt the data
-        $encryptedPassword = openssl_encrypt($password, $ciphering,
-            $encryption_key, $options, $encryption_iv);
+        $passwordHelper = new PasswordHelper();
+        $encryptedPassword = $passwordHelper->encryptPassword($password);
 
         $user_image = round(microtime(true) * 1000) . '.' . $extension;
         $filedest = dirname(__FILE__) . IMAGES_UPLOAD_PATH . $user_image;
@@ -548,9 +414,7 @@ class UserHandler{
         return "error";
     }
 
-    public function updateProfileImage($id, $file, $extension)
-    {
-
+    public function updateProfileImage($id, $file, $extension){
         $now = new DateTime();
         $created_at = $now->format("d M, Y h:i A");
         $updated_at = $created_at;
@@ -572,8 +436,4 @@ class UserHandler{
 
         return "error";
     }
-
 }
-
-
-?>

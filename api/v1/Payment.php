@@ -2,6 +2,7 @@
 
 require_once dirname(__FILE__) . '/PaymentHandler.php';
 require_once dirname(__FILE__) . '/UserHandler.php';
+require_once dirname(__FILE__) . '/TokenHandler.php';
 
 $response = array();
 
@@ -18,7 +19,6 @@ if (isset($_GET['call'])) {
                 $save = new PaymentHandler();
                 $result = $save->createPayment($payment_data);
 
-
                 if ($result == "ok") {
                     $response['error'] = false;
                     $response['response'] = 'Payment Successful!';
@@ -26,16 +26,14 @@ if (isset($_GET['call'])) {
                     $response['error'] = true;
                     $response['response'] = 'Nothing Changed!';
                 }
-
-
             } else {
                 $response['error'] = true;
                 $response['response'] = 'Error, Please Try Again!';
             }
-            
+
             break;
-            
-            case 'updatePayment':
+
+        case 'updatePayment':
 
             if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
@@ -46,12 +44,11 @@ if (isset($_GET['call'])) {
 
                 $payment_data = array("user_id" => $userId, "amount" => $amount, "method" => $method, "account_number" => $accountNumber);
 
-
                 $save = new PaymentHandler();
                 $result = $save->updatePayment($payment_data);
-                
+
                 $user = new UserHandler();
-                $userResult = $user->updateAccountStatusValue($userId,2);
+                $userResult = $user->updateAccountStatusValue($userId, 2);
 
                 if ($result == "ok") {
                     $response['error'] = false;
@@ -60,15 +57,12 @@ if (isset($_GET['call'])) {
                     $response['error'] = true;
                     $response['response'] = 'Something went wrong!';
                 }
-
-
             } else {
                 $response['error'] = true;
                 $response['response'] = 'Error, Please Try Again!';
             }
 
             break;
-
     }
 }
 
@@ -76,22 +70,48 @@ if (isset($_GET['get'])) {
     switch ($_GET['get']) {
 
         case 'allPayment':
+            $headers = getallheaders();
+            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
 
-            $db = new PaymentHandler();
-            $result = $db->getAllPayment();
+            if ($jwtToken) {
+                $tokenHandler = new TokenHandler();
+                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-            $response = $result;
+                if ($isTokenValid) {
+                    $db = new PaymentHandler();
+                    $result = $db->getAllPayment();
+
+                    $response = $result;
+                } else {
+                    http_response_code(401);
+                }
+            } else {
+                http_response_code(401);
+            }
 
             break;
 
         case 'paymentByName':
+            $headers = getallheaders();
+            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
 
-            if (isset($_POST['name'])) {
-                $name = $_POST['name'];
-                $db = new PaymentHandler();
-                $result = $db->getPaymentByName($name);
+            if ($jwtToken) {
+                $tokenHandler = new TokenHandler();
+                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                $response = $result;
+                if ($isTokenValid) {
+                    if (isset($_POST['name'])) {
+                        $name = $_POST['name'];
+                        $db = new PaymentHandler();
+                        $result = $db->getPaymentByName($name);
+
+                        $response = $result;
+                    }
+                } else {
+                    http_response_code(401);
+                }
+            } else {
+                http_response_code(401);
             }
 
             break;
@@ -99,5 +119,3 @@ if (isset($_GET['get'])) {
 }
 
 echo json_encode($response);
-
-?>

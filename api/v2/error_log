@@ -1,0 +1,28 @@
+[04-Dec-2023 23:13:50 Asia/Dhaka] PHP Warning:  mysqli::__construct(): (HY000/2002): No such file or directory in /home/quickrx/api.quickrx.xyz/api/v2/DbConnect.php on line 9
+[04-Dec-2023 23:13:50 Asia/Dhaka] PHP Warning:  mysqli::set_charset(): Couldn't fetch mysqli in /home/quickrx/api.quickrx.xyz/api/v2/DbConnect.php on line 10
+[04-Dec-2023 23:13:50 Asia/Dhaka] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/quickrx/api.quickrx.xyz/api/v2/UserHandler.php:245
+Stack trace:
+#0 /home/quickrx/api.quickrx.xyz/api/v2/User.php(258): UserHandler->getUserInfo('mdmasudahmed199...')
+#1 {main}
+  thrown in /home/quickrx/api.quickrx.xyz/api/v2/UserHandler.php on line 245
+[04-Dec-2023 23:13:50 Asia/Dhaka] PHP Warning:  mysqli::__construct(): (HY000/2002): No such file or directory in /home/quickrx/api.quickrx.xyz/api/v2/DbConnect.php on line 9
+[04-Dec-2023 23:13:50 Asia/Dhaka] PHP Warning:  mysqli::set_charset(): Couldn't fetch mysqli in /home/quickrx/api.quickrx.xyz/api/v2/DbConnect.php on line 10
+[04-Dec-2023 23:13:50 Asia/Dhaka] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/quickrx/api.quickrx.xyz/api/v2/UserHandler.php:245
+Stack trace:
+#0 /home/quickrx/api.quickrx.xyz/api/v2/User.php(258): UserHandler->getUserInfo('mdmasudahmed199...')
+#1 {main}
+  thrown in /home/quickrx/api.quickrx.xyz/api/v2/UserHandler.php on line 245
+[04-Dec-2023 23:13:51 Asia/Dhaka] PHP Warning:  mysqli::__construct(): (HY000/2002): No such file or directory in /home/quickrx/api.quickrx.xyz/api/v2/DbConnect.php on line 9
+[04-Dec-2023 23:13:51 Asia/Dhaka] PHP Warning:  mysqli::set_charset(): Couldn't fetch mysqli in /home/quickrx/api.quickrx.xyz/api/v2/DbConnect.php on line 10
+[04-Dec-2023 23:13:51 Asia/Dhaka] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/quickrx/api.quickrx.xyz/api/v2/ApplicationHandler.php:17
+Stack trace:
+#0 /home/quickrx/api.quickrx.xyz/api/v2/Application.php(47): ApplicationHandler->getAppInfo()
+#1 {main}
+  thrown in /home/quickrx/api.quickrx.xyz/api/v2/ApplicationHandler.php on line 17
+[04-Jan-2024 14:00:09 Asia/Dhaka] PHP Warning:  mysqli::__construct(): (HY000/2002): No such file or directory in /home/quickrx/api.quickrx.xyz/api/v2/DbConnect.php on line 9
+[04-Jan-2024 14:00:09 Asia/Dhaka] PHP Warning:  mysqli::set_charset(): Couldn't fetch mysqli in /home/quickrx/api.quickrx.xyz/api/v2/DbConnect.php on line 10
+[04-Jan-2024 14:00:09 Asia/Dhaka] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in /home/quickrx/api.quickrx.xyz/api/v2/UserHandler.php:245
+Stack trace:
+#0 /home/quickrx/api.quickrx.xyz/api/v2/User.php(258): UserHandler->getUserInfo('01798643584')
+#1 {main}
+  thrown in /home/quickrx/api.quickrx.xyz/api/v2/UserHandler.php on line 245

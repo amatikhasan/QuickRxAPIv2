@@ -23,10 +23,12 @@ if (isset($_GET['call'])) {
                     $response['error'] = false;
                     $response['response'] = $result;
                 } else {
+                    http_response_code(401);
                     $response['error'] = true;
                     $response['response'] = 'Error, Please Try Again!';
                 }
             } else {
+                http_response_code(401);
                 $response['error'] = true;
                 $response['response'] = 'Error, Please Try Again!';
             }

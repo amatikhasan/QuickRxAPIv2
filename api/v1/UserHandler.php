@@ -31,7 +31,7 @@ class UserHandler{
     }
 
     public function isAccountRegistered($phone){
-        $stmt = $this->con->prepare("SELECT id FROM users WHERE phone='$phone'");
+        $stmt = $this->con->prepare("SELECT id FROM users WHERE phone LIKE '%$phone'");
         $stmt->execute();
         $stmt->bind_result($id);
         if ($stmt->fetch()) {
@@ -47,7 +47,7 @@ class UserHandler{
         $passwordHelper = new PasswordHelper();
         $encryptedPassword = $passwordHelper->encryptPassword($password);
 
-        $stmt = $this->con->prepare("SELECT * FROM users WHERE (email='$emailOrPhone' OR phone='$emailOrPhone' OR phone LIKE '%$emailOrPhone') AND password='$encryptedPassword'");
+        $stmt = $this->con->prepare("SELECT id FROM users WHERE (email='$emailOrPhone' OR phone='$emailOrPhone' OR phone LIKE '%$emailOrPhone') AND password='$encryptedPassword'");
         $stmt->execute();
         $stmt->bind_result($id);
         if ($stmt->fetch()) {
@@ -65,10 +65,12 @@ class UserHandler{
 
         $passwordHelper = new PasswordHelper();
         $encryptedPassword = $passwordHelper->encryptPassword($password);
+        $phoneLike = '%' . $emailOrPhone;
 
         // Use prepared statements properly
-        $stmt = $this->con->prepare("SELECT * FROM users WHERE (email=? OR phone=? OR phone LIKE ?) AND password=? LIMIT 1");
-        $stmt->bind_param("ssss", $emailOrPhone, $emailOrPhone, $emailOrPhone, $encryptedPassword);
+        //$stmt = $this->con->prepare("SELECT * FROM users WHERE (email=? OR phone=? OR phone LIKE ?) AND password=? LIMIT 1");
+        //$stmt->bind_param("ssss", $emailOrPhone, $emailOrPhone, $phoneLike, $encryptedPassword);
+        $stmt = $this->con->prepare("SELECT * FROM users WHERE (email='$emailOrPhone' OR phone='$emailOrPhone' OR phone LIKE '%$emailOrPhone') AND password='$encryptedPassword' LIMIT 1");
 
         $stmt->execute();
         $result = $stmt->get_result();
@@ -100,10 +102,14 @@ class UserHandler{
     public function refreshToken($emailOrPhone, $password){
         $now = new DateTime();
         $updated_at = $now->format("d M, Y h:i A");
+        $passwordHelper = new PasswordHelper();
+        $encryptedPassword = $passwordHelper->encryptPassword($password);
 
+        $phoneLike = '%' . $emailOrPhone;
         // Use prepared statements properly
-        $stmt = $this->con->prepare("SELECT * FROM users WHERE (email=? OR phone=? OR phone LIKE ?) AND password=? LIMIT 1");
-        $stmt->bind_param("ssss", $emailOrPhone, $emailOrPhone, $emailOrPhone, $password);
+        //$stmt = $this->con->prepare("SELECT * FROM users WHERE (email=? OR phone=? OR phone LIKE ?) AND password=? LIMIT 1");
+        //$stmt->bind_param("ssss", $emailOrPhone, $emailOrPhone, $phoneLike, $password);
+        $stmt = $this->con->prepare("SELECT * FROM users WHERE (email='$emailOrPhone' OR phone='$emailOrPhone' OR phone LIKE '%$emailOrPhone') AND password='$encryptedPassword' LIMIT 1");
 
         $stmt->execute();
         $result = $stmt->get_result();
@@ -154,6 +160,8 @@ class UserHandler{
     }
 
     public function createUser($user_data){
+        $user = array();
+
         $name = $user_data['name'];
         $phone = $user_data['phone'];
         $firebase_uid = $user_data['firebase_uid'];
@@ -177,13 +185,19 @@ class UserHandler{
         if ($stmt->execute()) {
             $id = $stmt->insert_id;
             $stmt->close();
-            return $id;
+
+            $jwtToken = $this->loginReturnsToken($email, $password);
+            $user['id'] = $id;
+            $user['token'] = $jwtToken;
+            return $user;
         }
         $stmt->close();
         return "error";
     }
 
     public function createUserWithImage($file, $extension, $user_data){
+        $user = array();
+
         $name = $user_data['name'];
         $phone = $user_data['phone'];
         $email = $user_data['email'];
@@ -214,10 +228,28 @@ class UserHandler{
         if ($stmt->execute()) {
             $id = $stmt->insert_id;
             $stmt->close();
-            return $id;
+
+            $jwtToken = $this->loginReturnsToken($email, $password);
+            $user['id'] = $id;
+            $user['token'] = $jwtToken;
+            return $user;
         }
         $stmt->close();
         return "error";
+    }
+
+    public function getUserInfo($emailOrPhone){
+        $user = array();
+
+        $stmt = $this->con->prepare("SELECT * FROM users WHERE  email='$emailOrPhone' OR phone='$emailOrPhone' OR phone LIKE '%$emailOrPhone'");
+
+        $stmt->execute();
+        $result = new MySqliStmt($stmt);
+        while ($row = $result->fetch_assoc()) {
+            $user = $row;
+        }
+        $stmt->close();
+        return $user;
     }
 
     public function getUserDetails($emailOrPhone){

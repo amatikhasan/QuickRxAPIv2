@@ -2,18 +2,26 @@
 
 require_once dirname(__FILE__) . '/MySqliStmt.php';
 
-class ApplicationHandler{
+class ApplicationHandler
+{
+ 
     private $con;
  
-    public function __construct(){
+    public function __construct()
+    {
         require_once dirname(__FILE__) . '/DbConnect.php';
         date_default_timezone_set('Asia/Dhaka');
  
         $db = new DbConnect();
         $this->con = $db->connect();
+        
     }
 
-    public function getAppInfo(){
+    public function getAppInfo()
+    {
+       
+        //$info = array();
+        
         $stmt = $this->con->prepare("SELECT * FROM app_info LIMIT 1");
         $stmt->execute();
         
@@ -25,7 +33,8 @@ class ApplicationHandler{
         return $info;
     }
 
-    public function updateAppInfo($id,$subscription_fee,$account_number, $hotline, $facebook_link, $about_us, $terms){
+    public function updateAppInfo($id,$subscription_fee,$account_number, $hotline, $facebook_link, $about_us, $terms)
+    {
         $now = new DateTime();
         $created_at= $now->format("d M, Y h:i A");
         $updated_at=$created_at;
@@ -42,7 +51,8 @@ class ApplicationHandler{
         return "error";
     }
     
-    public function createFeedback($user_id, $feedback){
+    public function createFeedback($user_id, $feedback)
+    {
         $now = new DateTime();
         $created_at= $now->format("d M, Y h:i A");
         $updated_at=$created_at;
@@ -55,10 +65,12 @@ class ApplicationHandler{
         if ($affected_rows>0){
             return "ok";
         }
+ 
         return "error";
     }
     
-    public function getFeedback(){
+    public function getFeedback()
+    {
         $feedback = array();
         $stmt = $this->con->prepare("SELECT feedback.*,users.name AS user_name FROM feedback LEFT JOIN users ON feedback.user_id=users.id ORDER BY feedback.id DESC");
         $stmt->execute();
@@ -75,4 +87,7 @@ class ApplicationHandler{
         
         return $feedback;
     }
+    
 }
+
+?>

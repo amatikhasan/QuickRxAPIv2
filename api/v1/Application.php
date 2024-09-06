@@ -1,7 +1,7 @@
 <?php
 
+
 require_once dirname(__FILE__) . '/ApplicationHandler.php';
-require_once dirname(__FILE__) . '/TokenHandler.php';
 
 $response = array();
 
@@ -52,26 +52,13 @@ if (isset($_GET['get'])) {
 
         case 'feedback':
 
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
+            $db = new ApplicationHandler();
+            $result = $db->getFeedback();
 
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
-
-                if ($isTokenValid) {
-                    $db = new ApplicationHandler();
-                    $result = $db->getFeedback();
-
-                    $response = $result;
-                } else {
-                    http_response_code(401);
-                }
-            } else {
-                http_response_code(401);
-            }
+            $response = $result;
 
             break;
+
     }
 }
 
@@ -79,46 +66,40 @@ if (isset($_GET['update'])) {
     switch ($_GET['update']) {
 
         case 'info':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
 
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
+            if (isset($_POST['id'])) {
+                $subscription_fee = $_POST['subscription_fee'];
+                $account_number = $_POST['account_number'];
+                $hotline = $_POST['hotline'];
+                $facebook_link = $_POST['facebook_link'];
+                $about_us = $_POST['about_us'];
+                $terms = $_POST['terms_and_condition'];
 
-                if ($isTokenValid) {
-                    if (isset($_POST['id'])) {
-                        $id = $_POST['id'];
-                        $subscription_fee = $_POST['subscription_fee'];
-                        $account_number = $_POST['account_number'];
-                        $hotline = $_POST['hotline'];
-                        $facebook_link = $_POST['facebook_link'];
-                        $about_us = $_POST['about_us'];
-                        $terms = $_POST['terms_and_condition'];
+                $save = new ApplicationHandler();
+                $result = $save->updateAppInfo($id,$subscription_fee,$account_number, $hotline, $facebook_link, $about_us, $terms);
 
-                        $save = new ApplicationHandler();
-                        $result = $save->updateAppInfo($id, $subscription_fee, $account_number, $hotline, $facebook_link, $about_us, $terms);
 
-                        if ($result == "updated") {
-                            $response['error'] = false;
-                            $response['response'] = 'Updated Successfully!';
-                        } else {
-                            $response['error'] = true;
-                            $response['response'] = 'Nothing Changed!';
-                        }
-                    } else {
-                        $response['error'] = true;
-                        $response['response'] = 'Error, Please Try Again!';
-                    }
+                if ($result == "updated") {
+                    $response['error'] = false;
+                    $response['response'] = 'Updated Successfully!';
                 } else {
-                    http_response_code(401);
+                    $response['error'] = true;
+                    $response['response'] = 'Nothing Changed!';
                 }
+
+
             } else {
-                http_response_code(401);
+                $response['error'] = true;
+                $response['response'] = 'Error, Please Try Again!';
             }
 
             break;
+
     }
+
 }
 
 echo json_encode($response);
+
+
+?>

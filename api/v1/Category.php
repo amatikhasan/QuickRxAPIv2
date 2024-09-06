@@ -1,7 +1,7 @@
 <?php
 
+
 require_once dirname(__FILE__) . '/CategoryHandler.php';
-require_once dirname(__FILE__) . '/TokenHandler.php';
 
 $response = array();
 
@@ -13,341 +13,228 @@ if (isset($_GET['call'])) {
     switch ($_GET['call']) {
 
         case 'create':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                if ($isTokenValid) {
+            if (isset($_POST['name']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+                $db = new CategoryHandler();
 
-                    if (isset($_POST['name']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-                        $db = new CategoryHandler();
+                $file = $_FILES['file']['tmp_name'];
 
-                        $file = $_FILES['file']['tmp_name'];
-                        $name = $_POST['name'];
-                        $parent_cat_id = $_POST['parent_cat_id'];
-                        $type = $_POST['type'];
+                $name = $_POST['name'];
+                $parent_cat_id = $_POST['parent_cat_id'];
+                $type = $_POST['type'];
 
-                        $fileExt = getFileExtension($_FILES['file']['name']);
+                $fileExt = getFileExtension($_FILES['file']['name']);
 
-                        $category_data = array("name" => $name, "parent_cat_id" => $parent_cat_id, "type" => $type);
-                        $result = $db->createCategoryWithFile($file, $fileExt, $category_data);
+                $category_data = array("name" => $name, "parent_cat_id" => $parent_cat_id, "type" => $type);
+                $result = $db->createCategoryWithFile($file, $fileExt, $category_data);
 
-                        if ($result != null && $result != "error") {
-                            $response = $result;
-                        }
-                    } else {
-                        $response['error'] = true;
-                        $response['response'] = 'Required fields are missing';
-                    }
-                } else {
-                    http_response_code(401);
+
+                if ($result != null && $result != "error") {
+                    $response = $result;
                 }
             } else {
-                http_response_code(401);
+                $response['error'] = true;
+                $response['response'] = 'Required fields are missing';
             }
 
             break;
 
         case 'getAllCategory':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                if ($isTokenValid) {
-                    // Process the API request and return data
-                    $db = new CategoryHandler();
-                    $result = $db->getAllCategory();
+            $db = new CategoryHandler();
+            $result = $db->getAllCategory();
 
-                    $response = $result;
-                } else {
-                    http_response_code(401);
-                }
-            } else {
-                http_response_code(401);
-            }
+            $response = $result;
 
             break;
 
         case 'getMainCategory':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                if ($isTokenValid) {
-                    $db = new CategoryHandler();
-                    $result = $db->getAllMainCategory();
+            $db = new CategoryHandler();
+            $result = $db->getAllMainCategory();
 
-                    $response = $result;
-                } else {
-                    http_response_code(401);
-                }
-            } else {
-                http_response_code(401);
-            }
+            $response = $result;
 
             break;
 
         case 'getParentCategory':
 
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
+            if (isset($_POST['sub_cat_id'])) {
+                $sub_cat_id = $_POST['sub_cat_id'];
+                $db = new CategoryHandler();
+                $result = $db->getAllParentCategory($sub_cat_id);
 
-                if ($isTokenValid) {
-                    if (isset($_POST['sub_cat_id'])) {
-                        $sub_cat_id = $_POST['sub_cat_id'];
-                        $db = new CategoryHandler();
-                        $result = $db->getAllParentCategory($sub_cat_id);
-
-                        if ($result != null && $result != "error") {
-                            $response = $result;
-                        }
-                    } else {
-                        $response['error'] = true;
-                        $response['response'] = 'Error, Please Try Again!';
-                    }
-                } else {
-                    http_response_code(401);
+                if ($result != null && $result != "error") {
+                    $response = $result;
                 }
+
             } else {
-                http_response_code(401);
+                $response['error'] = true;
+                $response['response'] = 'Error, Please Try Again!';
             }
 
             break;
 
         case 'getSubCategory':
 
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
+            if (isset($_POST['parent_cat_id'])) {
+                $parent_cat_id = $_POST['parent_cat_id'];
+                $db = new CategoryHandler();
+                $result = $db->getAllSubCategoryById($parent_cat_id);
 
-                if ($isTokenValid) {
-                    if (isset($_POST['parent_cat_id'])) {
-                        $parent_cat_id = $_POST['parent_cat_id'];
-                        $db = new CategoryHandler();
-                        $result = $db->getAllSubCategoryById($parent_cat_id);
-
-                        if ($result != null && $result != "error") {
-                            $response = $result;
-                        }
-                    } else {
-                        $response['error'] = true;
-                        $response['response'] = 'Error, Please Try Again!';
-                    }
-                } else {
-                    http_response_code(401);
+                if ($result != null && $result != "error") {
+                    $response = $result;
                 }
+
             } else {
-                http_response_code(401);
+                $response['error'] = true;
+                $response['response'] = 'Error, Please Try Again!';
             }
 
             break;
 
         case 'getSingleCategory':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                if ($isTokenValid) {
-                    if (isset($_POST['id'])) {
-                        $id = $_POST['id'];
-                        $db = new CategoryHandler();
-                        $result = $db->getCategoryById($id);
+            if (isset($_POST['id'])) {
+                $id = $_POST['id'];
+                $db = new CategoryHandler();
+                $result = $db->getCategoryById($id);
 
-                        if ($result != null && $result != "error") {
-                            $response = $result;
-                        }
-                    } else {
-                        $response['error'] = true;
-                        $response['response'] = 'Error, Please Try Again!';
-                    }
-                } else {
-                    http_response_code(401);
+                if ($result != null && $result != "error") {
+                    $response = $result;
                 }
+
             } else {
-                http_response_code(401);
+                $response['error'] = true;
+                $response['response'] = 'Error, Please Try Again!';
             }
 
             break;
 
         case 'getAllSubCategory':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                if ($isTokenValid) {
-                    $db = new CategoryHandler();
-                    $result = $db->getAllSubCategory();
+            $db = new CategoryHandler();
+            $result = $db->getAllSubCategory();
 
-                    $response = $result;
-                } else {
-                    http_response_code(401);
-                }
-            } else {
-                http_response_code(401);
-            }
+            $response = $result;
+
             break;
 
         case 'update':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                if ($isTokenValid) {
-                    if (isset($_POST['id']) && isset($_POST['name'])) {
-                        $db = new CategoryHandler();
+            if (isset($_POST['id']) && isset($_POST['name'])) {
 
-                        $id = $_POST['id'];
-                        $name = $_POST['name'];
-                        $parent_cat_id = $_POST['parent_cat_id'];
-                        $type = $_POST['type'];
-                        $image_url = $_POST['image_url'];
+                $db = new CategoryHandler();
 
-                        $category_data = array("id" => $id, "name" => $name, "parent_cat_id" => $parent_cat_id, "type" => $type, "image_url" => $image_url);
-                        $result = $db->updateCategory($category_data);
+                $id = $_POST['id'];
+                $name = $_POST['name'];
+                $parent_cat_id = $_POST['parent_cat_id'];
+                $type = $_POST['type'];
+                $image_url = $_POST['image_url'];
 
-                        if ($result != null && $result != "error") {
-                            $response = $result;
-                        } else {
-                            $response['error'] = true;
-                            $response['response'] = 'Error, Please try again!';
-                        }
-                    } else {
-                        $response['error'] = true;
-                        $response['response'] = 'Required fields are missing';
-                    }
+                $category_data = array("id" => $id, "name" => $name, "parent_cat_id" => $parent_cat_id, "type" => $type, "image_url" => $image_url);
+                $result = $db->updateCategory($category_data);
+
+                if ($result != null && $result != "error") {
+                    $response = $result;
                 } else {
-                    http_response_code(401);
+                    $response['error'] = true;
+                    $response['response'] = 'Error, Please try again!';
                 }
+
+
             } else {
-                http_response_code(401);
+                $response['error'] = true;
+                $response['response'] = 'Required fields are missing';
             }
 
             break;
 
         case 'updateWithImage':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                if ($isTokenValid) {
-                    if (isset($_POST['id']) && isset($_POST['name']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-                        $db = new CategoryHandler();
+            if (isset($_POST['id']) && isset($_POST['name']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
 
-                        $file = $_FILES['file']['tmp_name'];
+                $db = new CategoryHandler();
 
-                        $id = $_POST['id'];
-                        $name = $_POST['name'];
-                        $parent_cat_id = $_POST['parent_cat_id'];
-                        $type = $_POST['type'];
-                        $image_url = $_POST['image_url'];
+                $file = $_FILES['file']['tmp_name'];
 
-                        $fileExt = getFileExtension($_FILES['file']['name']);
+                $id = $_POST['id'];
+                $name = $_POST['name'];
+                $parent_cat_id = $_POST['parent_cat_id'];
+                $type = $_POST['type'];
+                $image_url = $_POST['image_url'];
 
-                        $category_data = array("id" => $id, "name" => $name, "parent_cat_id" => $parent_cat_id, "type" => $type, "image_url" => $image_url);
-                        $result = $db->updateCategoryWithFile($file, $fileExt, $category_data);
+                $fileExt = getFileExtension($_FILES['file']['name']);
 
-                        if ($result != null && $result != "error") {
-                            $response = $result;
-                        } else {
-                            $response['error'] = true;
-                            $response['response'] = 'Error, Please try again!';
-                        }
-                    } else if (isset($_POST['id']) && isset($_POST['name'])) {
-                        $db = new CategoryHandler();
+                $category_data = array("id" => $id, "name" => $name, "parent_cat_id" => $parent_cat_id, "type" => $type, "image_url" => $image_url);
+                $result = $db->updateCategoryWithFile($file, $fileExt, $category_data);
 
-                        $id = $_POST['id'];
-                        $name = $_POST['name'];
-                        $parent_cat_id = $_POST['parent_cat_id'];
-                        $type = $_POST['type'];
-                        $image_url = $_POST['image_url'];
 
-                        $category_data = array("id" => $id, "name" => $name, "parent_cat_id" => $parent_cat_id, "type" => $type, "image_url" => $image_url);
-                        $result = $db->updateCategory($category_data);
-
-                        if ($result != null && $result != "error") {
-                            $response = $result;
-                        } else {
-                            $response['error'] = true;
-                            $response['response'] = 'Error, Please try again!';
-                        }
-                    } else {
-                        $response['error'] = true;
-                        $response['response'] = 'Required fields are missing';
-                    }
+                if ($result != null && $result != "error") {
+                    $response = $result;
                 } else {
-                    http_response_code(401);
+                    $response['error'] = true;
+                    $response['response'] = 'Error, Please try again!';
                 }
+
+
+            } else if (isset($_POST['id']) && isset($_POST['name'])) {
+
+                $db = new CategoryHandler();
+
+                $id = $_POST['id'];
+                $name = $_POST['name'];
+                $parent_cat_id = $_POST['parent_cat_id'];
+                $type = $_POST['type'];
+                $image_url = $_POST['image_url'];
+
+                $category_data = array("id" => $id, "name" => $name, "parent_cat_id" => $parent_cat_id, "type" => $type, "image_url" => $image_url);
+                $result = $db->updateCategory($category_data);
+
+                if ($result != null && $result != "error") {
+                    $response = $result;
+                } else {
+                    $response['error'] = true;
+                    $response['response'] = 'Error, Please try again!';
+                }
+
+
             } else {
-                http_response_code(401);
+                $response['error'] = true;
+                $response['response'] = 'Required fields are missing';
             }
 
             break;
 
         case 'delete':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                if ($isTokenValid) {
-                    if (isset($_POST['id']) && isset($_POST['image_url'])) {
-                        $id = $_POST['id'];
-                        $image_url = $_POST['image_url'];
-                        $db = new CategoryHandler();
-                        $result = $db->deleteCategory($id, $image_url);
+            if (isset($_POST['id']) && isset($_POST['image_url'])) {
+                $id = $_POST['id'];
+                $image_url = $_POST['image_url'];
+                $db = new CategoryHandler();
+                $result = $db->deleteCategory($id, $image_url);
 
-                        if ($result == "deleted") {
-                            $response['error'] = false;
-                            $response['response'] = 'Deleted Successfully!';
-                        }
-                    } else {
-                        $response['error'] = true;
-                        $response['response'] = 'Required fields are missing';
-                    }
-                } else {
-                    http_response_code(401);
+                if ($result == "deleted") {
+                    $response['error'] = false;
+                    $response['response'] = 'Deleted Successfully!';
                 }
+
             } else {
-                http_response_code(401);
+                $response['error'] = true;
+                $response['response'] = 'Required fields are missing';
             }
 
             break;
+
     }
 }
 
-function getFileExtension($file){
+function getFileExtension($file)
+{
     $path_parts = pathinfo($file);
     return $path_parts['extension'];
 }
 
 echo json_encode($response);
+
+?>

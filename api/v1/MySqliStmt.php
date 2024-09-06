@@ -30,3 +30,5 @@ class MySqliStmt {
         $this->stmt->close();
     }
 }
+
+?>

@@ -1,68 +1,75 @@
 <?php
 
 require_once dirname(__FILE__) . '/MySqliStmt.php';
-require_once dirname(__FILE__) . '/Constants.php';
-require_once dirname(__FILE__) . '/TokenHandler.php';
-require_once dirname(__FILE__) . '/PasswordHelper.php';
 
-class AdminHandler{
+class AdminHandler
+{
+
     private $con;
 
-    public function __construct(){
+    public function __construct()
+    {
         require_once dirname(__FILE__) . '/DbConnect.php';
         date_default_timezone_set('Asia/Dhaka');
 
         $db = new DbConnect();
         $this->con = $db->connect();
+
     }
 
-    public function login($username, $password){
-        $now = new DateTime();
-        $updated_at = $now->format("d M, Y h:i A");
+    public function login($username, $password)
+    {
+        // Store the cipher method
+        $ciphering = "AES-128-CTR";
 
-        $passwordHelper = new PasswordHelper();
-        $encryptedPassword = $passwordHelper->encryptPassword($password);
+        // Use OpenSSl Encryption method
+        $iv_length = openssl_cipher_iv_length($ciphering);
+        $options = 0;
 
-        $stmt = $this->con->prepare("SELECT * FROM admin WHERE username=? AND password=? LIMIT 1");
+        // Non-NULL Initialization Vector for encryption
+        $encryption_iv = '1234567891011121';
+
+        // Store the encryption key
+        $encryption_key = "quickrx";
+
+        // Use openssl_encrypt() function to encrypt the data
+        $encryptedPassword = openssl_encrypt($password, $ciphering,
+            $encryption_key, $options, $encryption_iv);
+
+        $stmt = $this->con->prepare("SELECT id FROM admin WHERE username=? AND password=?");
         $stmt->bind_param("ss", $username, $encryptedPassword);
-
         $stmt->execute();
-        $result = $stmt->get_result();
-
-        $user = $result->fetch_assoc();
-        if (!$user) {
-            return 'error';
+        $stmt->bind_result($id);
+        if ($stmt->fetch()) {
+            $stmt->close();
+            return $id;
+        } else {
+            $stmt->close();
+            return null;
         }
-
-        // Generate and sign the JWT token
-        $tokenHandler= new TokenHandler();
-        $jwtToken = $tokenHandler->createJWT($user['id'], $user['phone'], $user['email'], 'admin');
-
-        if (!$jwtToken) {
-            return 'error';
-        }
-
-        $stmt->close();
-
-        $stmt = $this->con->prepare("UPDATE admin SET token=?,updated_at=? WHERE id=?");
-        $stmt->bind_param("ssi", $jwtToken, $updated_at, $user['id']);
-        $stmt->execute();
-
-        $stmt->close();
-
-        return $jwtToken;
     }
-
-    public function updatePassword($password, $token){
+    
+    public function updatePassword($id, $password)
+    {
         $now = new DateTime();
         $updated_at = $now->format("d M, Y h:i A");
 
-        $passwordHelper = new PasswordHelper();
-        $encryptedPassword = $passwordHelper->encryptPassword($password);
+        // Store the cipher method
+        $ciphering = "AES-128-CTR";
 
-        $tokenHandler= new TokenHandler();
-        $decodedToken = $tokenHandler->decodeToken($token);
-        $id = $decodedToken->id;
+        // Use OpenSSl Encryption method
+        $iv_length = openssl_cipher_iv_length($ciphering);
+        $options = 0;
+
+        // Non-NULL Initialization Vector for encryption
+        $encryption_iv = '1234567891011121';
+
+        // Store the encryption key
+        $encryption_key = "quickrx";
+
+        // Use openssl_encrypt() function to encrypt the data
+        $encryptedPassword = openssl_encrypt($password, $ciphering,
+            $encryption_key, $options, $encryption_iv);
 
         $stmt = $this->con->prepare("UPDATE admin SET password=?, updated_at=? WHERE id=?");
         $stmt->bind_param("ssi", $encryptedPassword,$updated_at, $id);
@@ -78,3 +85,5 @@ class AdminHandler{
     }
 
 }
+
+?>

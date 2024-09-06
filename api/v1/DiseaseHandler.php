@@ -2,18 +2,23 @@
 
 require_once dirname(__FILE__) . '/MySqliStmt.php';
 
-class DiseaseHandler{
+class DiseaseHandler
+{
+
     private $con;
 
-    public function __construct(){
+    public function __construct()
+    {
         require_once dirname(__FILE__) . '/DbConnect.php';
         date_default_timezone_set('Asia/Dhaka');
 
         $db = new DbConnect();
         $this->con = $db->connect();
+
     }
 
-    public function createDisease($disease_data){
+    public function createDisease($disease_data)
+    {
         $name = $disease_data['name'];
         $cat_id = $disease_data['cat_id'];
         $clue_to_dx = $disease_data['clue_to_dx'];
@@ -31,10 +36,12 @@ class DiseaseHandler{
             $id = $stmt->insert_id;
             return $id;
         }
+
         return "error";
     }
 
-    public function createArticle($disease_data){
+    public function createArticle($disease_data)
+    {
         $name = $disease_data['name'];
         $cat_id = $disease_data['cat_id'];
         $details = $disease_data['details'];
@@ -50,16 +57,19 @@ class DiseaseHandler{
             $id = $stmt->insert_id;
             return $id;
         }
+
         return "error";
     }
 
-    public function createDiseaseImage($disease_id, $file, $extension){
+    public function createDiseaseImage($disease_id, $file, $extension)
+    {
+
         $disease_image = round(microtime(true) * 1000) . '.' . $extension;
         $fileLocation = dirname(__FILE__) . IMAGES_UPLOAD_PATH . $disease_image;
 
         move_uploaded_file($file, $fileLocation);
 
-        $image_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/api/v2/uploads/images/".$disease_image;
+        $image_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/api/v1/uploads/images/".$disease_image;
 
         $now = new DateTime();
         $created_at = $now->format("d M, Y  h:i A");
@@ -72,10 +82,13 @@ class DiseaseHandler{
             $id = $stmt->insert_id;
             return $id;
         }
+
         return "error";
     }
 
-    public function getAllDisease(){
+    public function getAllDisease()
+    {
+
         $stmt = $this->con->prepare("SELECT * FROM disease ORDER BY name DESC");
         $stmt->execute();
         //$result = $stmt -> get_result();
@@ -95,7 +108,9 @@ class DiseaseHandler{
         return $diseases;
     }
 
-    public function getAllDiseaseImage($disease_id){
+    public function getAllDiseaseImage($disease_id)
+    {
+
         $stmt = $this->con->prepare("SELECT * FROM disease_image WHERE disease_id=? ORDER BY id DESC");
         $stmt->bind_param("i", $disease_id);
         $stmt->execute();
@@ -117,7 +132,9 @@ class DiseaseHandler{
     }
 
 
-    public function getDiseaseDetails($id){
+    public function getDiseaseDetails($id)
+    {
+
         $stmt = $this->con->prepare("SELECT * FROM disease WHERE id=?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -132,10 +149,13 @@ class DiseaseHandler{
         }
         $stmt->close();
 
+
         return $disease;
     }
 
-    public function getDiseasesByCat($cat_id){
+    public function getDiseasesByCat($cat_id)
+    {
+
         $stmt = $this->con->prepare("SELECT * FROM disease WHERE cat_id=? ORDER BY name ASC");
         $stmt->bind_param("i", $cat_id);
         $stmt->execute();
@@ -152,10 +172,13 @@ class DiseaseHandler{
         }
         $stmt->close();
 
+
         return $diseases;
     }
 
-    public function updateDisease($disease_data){
+    public function updateDisease($disease_data)
+    {
+
         $id = $disease_data['id'];
         $name = $disease_data['name'];
         $cat_id = $disease_data['cat_id'];
@@ -177,7 +200,9 @@ class DiseaseHandler{
         return "error";
     }
 
-    public function updateArticle($disease_data){
+    public function updateArticle($disease_data)
+    {
+
         $id = $disease_data['id'];
         $name = $disease_data['name'];
         $cat_id = $disease_data['cat_id'];
@@ -197,7 +222,9 @@ class DiseaseHandler{
         return "error";
     }
 
-    public function deleteDisease($id){
+
+    public function deleteDisease($id)
+    {
 
         $stmt = $this->con->prepare("DELETE FROM disease WHERE id='$id'");
 
@@ -208,7 +235,9 @@ class DiseaseHandler{
         }
     }
 
-    public function deleteDiseaseImage($id){
+    public function deleteDiseaseImage($id)
+    {
+
         $stmt = $this->con->prepare("DELETE FROM disease_image WHERE id='$id'");
 
         if ($stmt->execute()) {
@@ -218,3 +247,5 @@ class DiseaseHandler{
         }
     }
 }
+
+?>

@@ -2,7 +2,6 @@
 
 //header('Content-Type: application/json');
 require_once dirname(__FILE__) . '/UserHandler.php';
-require_once dirname(__FILE__) . '/TokenHandler.php';
 
 $response = array();
 
@@ -31,8 +30,8 @@ if (isset($_GET['call'])) {
             }
 
             break;
-
-        case 'checkAccountWithPhoneReturnsId':
+            
+            case 'checkAccountWithPhoneReturnsId':
 
             if (isset($_POST['phone'])) {
                 $phone = $_POST['phone'];
@@ -73,8 +72,8 @@ if (isset($_GET['call'])) {
             }
 
             break;
-
-        case 'loginReturnUserDetails':
+            
+            case 'loginReturnUserDetails':
 
             if (isset($_POST['email_or_phone']) && isset($_POST['password'])) {
                 $emailOrPhone = $_POST['email_or_phone'];
@@ -83,61 +82,9 @@ if (isset($_GET['call'])) {
                 $db = new UserHandler();
                 $result = $db->loginReturnUserDetails($emailOrPhone, $password);
 
-                $response = $result;
-            } else {
-                http_response_code(400);
-                $response['error'] = true;
-                $response['response'] = 'Error, Please Try Again!';
-            }
-
-            break;
-
-        case 'loginReturnsToken':
-
-            if (isset($_POST['email_or_phone']) && isset($_POST['password'])) {
-                $emailOrPhone = $_POST['email_or_phone'];
-                $password = $_POST['password'];
-
-                $db = new UserHandler();
-                $result = $db->loginReturnsToken($emailOrPhone, $password);
-
-                if ($result != "error") {
-                    $response['error'] = false;
-                    $response['token'] = $result;
-                } else {
-                    http_response_code(400);
-                    $response['error'] = true;
-                    $response['response'] = 'Error, Please Try Again!';
-                }
+                 $response = $result;
 
             } else {
-                http_response_code(400);
-                $response['error'] = true;
-                $response['response'] = 'Error, Please Try Again!';
-            }
-
-            break;
-
-        case 'refreshToken':
-
-            if (isset($_POST['email_or_phone']) && isset($_POST['password'])) {
-                $emailOrPhone = $_POST['email_or_phone'];
-                $password = $_POST['password'];
-
-                $db = new UserHandler();
-                $result = $db->refreshToken($emailOrPhone, $password);
-
-                if ($result != "error") {
-                    $response['error'] = false;
-                    $response['token'] = $result;
-                } else {
-                    http_response_code(400);
-                    $response['error'] = true;
-                    $response['response'] = 'Error, Please Try Again!';
-                }
-
-            } else {
-                http_response_code(400);
                 $response['error'] = true;
                 $response['response'] = 'Error, Please Try Again!';
             }
@@ -158,22 +105,21 @@ if (isset($_GET['call'])) {
                 $reg_number = $_POST['reg_number'];
                 $account_status = $_POST['account_status'];
 
-                $user_data = array("name" => $name, "phone" => $phone, "firebase_uid" => $firebase_uid, "unique_id" => $unique_id, "email" => $email, "password" => $password, "dob" => $dob, "reg_number" => $reg_number, "account_status" => $account_status);
+                $user_data = array("name" => $name, "phone" => $phone, "firebase_uid" => $firebase_uid,"unique_id" => $unique_id, "email" => $email, "password" => $password, "dob" => $dob, "reg_number" => $reg_number, "account_status"=> $account_status);
 
                 $save = new UserHandler();
                 $result = $save->createUser($user_data);
 
                 if ($result != "error") {
                     $response['error'] = false;
-                    $response['id'] = $result['id'];
-                    $response['token'] = $result['token'];
+                    $response['response'] = $result;
                 } else {
-                    http_response_code(400);
                     $response['error'] = true;
                     $response['response'] = 'Required fields are missing!!';
                 }
-            } else {
-                http_response_code(400);
+
+
+            }else {
                 $response['error'] = true;
                 $response['response'] = 'Required fields are missing';
             }
@@ -199,208 +145,105 @@ if (isset($_GET['call'])) {
 
                 $fileExt = getFileExtension($_FILES['file']['name']);
 
-                $user_data = array("name" => $name, "phone" => $phone, "email" => $email, "password" => $password, "firebase_uid" => $firebase_uid, "unique_id" => $unique_id, "dob" => $dob, "reg_number" => $reg_number, "account_status" => $account_status);
+                $user_data = array("name" => $name, "phone" => $phone, "email" => $email, "password" => $password,"firebase_uid" => $firebase_uid,"unique_id" => $unique_id, "dob" => $dob, "reg_number" => $reg_number, "account_status"=> $account_status);
                 $result = $db->createUserWithImage($file, $fileExt, $user_data);
+
 
                 if ($result != "error") {
                     $response['error'] = false;
-                    $response['id'] = $result['id'];
-                    $response['token'] = $result['token'];
-                } else {
-                    http_response_code(400);
+                    $response['response'] = $result;
+                }else {
                     $response['error'] = true;
                     $response['response'] = 'Required fields are missing!!';
                 }
+
             } else {
-                http_response_code(400);
                 $response['error'] = true;
                 $response['response'] = 'Required fields are missing';
             }
 
             break;
 
-        case 'getUserDetails':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
-
-                if ($isTokenValid) {
-                    if (isset($_POST['email_or_phone'])) {
-                        $emailOrPhone = $_POST['email_or_phone'];
-                        $db = new UserHandler();
-                        $result = $db->getUserDetails($emailOrPhone);
-
-                        $response = $result;
-                    } else {
-                        $response['error'] = true;
-                        $response['response'] = 'Error, Please Try Again!';
-                    }
-                } else {
-                    http_response_code(401);
-                    $response['error'] = true;
-                    $response['response'] = 'Error, Please Try Again!';
-                }
-            } else {
-                http_response_code(401);
-                $response['error'] = true;
-                $response['response'] = 'Error, Please Try Again!';
-            }
-            break;
-
-        case 'getUserInfo':
+        case 'get':
 
             if (isset($_POST['email_or_phone'])) {
                 $emailOrPhone = $_POST['email_or_phone'];
                 $db = new UserHandler();
-                $result = $db->getUserInfo($emailOrPhone);
+                $result = $db->getUserDetails($emailOrPhone);
 
                 $response = $result;
             } else {
-                http_response_code(400);
                 $response['error'] = true;
                 $response['response'] = 'Error, Please Try Again!';
             }
+
             break;
-
+            
         case 'getAllUsers':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                if ($isTokenValid) {
-                    $db = new UserHandler();
-                    $result = $db->getAllUsers();
+            $db = new UserHandler();
+            $result = $db->getAllUsers();
 
-                    $response = $result;
-                } else {
-                    http_response_code(401);
-                }
-            } else {
-                http_response_code(401);
-            }
+            $response = $result;
+
             break;
 
         case 'getByName':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                if ($isTokenValid) {
-                    if (isset($_POST['name'])) {
-                        $name = $_POST['name'];
-                        $db = new UserHandler();
-                        $result = $db->getUserByName($name);
+            if (isset($_POST['name'])) {
+                $name = $_POST['name'];
+                $db = new UserHandler();
+                $result = $db->getUserByName($name);
 
-                        $response = $result;
-                    } else {
-                        http_response_code(400);
-                        $response['error'] = true;
-                        $response['response'] = 'Error, Please Try Again!';
-                    }
-                } else {
-                    http_response_code(401);
-                }
+                $response = $result;
             } else {
-                http_response_code(401);
+                $response['error'] = true;
+                $response['response'] = 'Error, Please Try Again!';
             }
 
             break;
 
         case 'update':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                if ($isTokenValid) {
-                    if ($_SERVER['REQUEST_METHOD'] == "POST") {
+            if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
-                        $id = $_POST['id'];
-                        $name = $_POST['name'];
-                        $phone = $_POST['phone'];
-                        $email = $_POST['email'];
-                        $password = $_POST['password'];
-                        $dob = $_POST['dob'];
-                        $reg_number = $_POST['reg_number'];
+                $id = $_POST['id'];
+                $name = $_POST['name'];
+                $phone = $_POST['phone'];
+                $email = $_POST['email'];
+                $password = $_POST['password'];
+                $dob = $_POST['dob'];
+                $reg_number = $_POST['reg_number'];
 
-                        $user_data = array("id" => $id, "name" => $name, "phone" => $phone, "email" => $email, "password" => $password, "dob" => $dob, "reg_number" => $reg_number);
+                $user_data = array("id" => $id, "name" => $name, "phone" => $phone, "email" => $email, "password" => $password, "dob" => $dob, "reg_number" => $reg_number);
 
-                        $save = new UserHandler();
-                        $result = $save->updateUser($user_data);
 
-                        if ($result == "updated") {
-                            $response['error'] = false;
-                            $response['response'] = 'Updated Successfully!';
-                        } else {
-                            $response['error'] = true;
-                            $response['response'] = 'Something went wrong!';
-                        }
-                    } else {
-                        $response['error'] = true;
-                        $response['response'] = 'Error, Please Try Again!';
-                    }
+                $save = new UserHandler();
+                $result = $save->updateUser($user_data);
+
+                if ($result == "updated") {
+                    $response['error'] = false;
+                    $response['response'] = 'Updated Successfully!';
                 } else {
-                    http_response_code(401);
+                    $response['error'] = true;
+                    $response['response'] = 'Something went wrong!';
                 }
+
+
             } else {
-                http_response_code(401);
+                $response['error'] = true;
+                $response['response'] = 'Error, Please Try Again!';
             }
 
             break;
+            
+            case 'updatePassword':
 
-        case 'updateUniqueId':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
-
-                if ($isTokenValid) {
-                    if ($_SERVER['REQUEST_METHOD'] == "POST") {
-
-                        $id = $_POST['id'];
-                        $unique_id = $_POST['unique_id'];
-
-                        $save = new UserHandler();
-                        $result = $save->updateUniqueId($id, $unique_id);
-
-                        if ($result == "updated") {
-                            $response['error'] = false;
-                            $response['response'] = 'Updated Successfully!';
-                        } else {
-                            $response['error'] = true;
-                            $response['response'] = 'Something went wrong!';
-                        }
-                    } else {
-                        $response['error'] = true;
-                        $response['response'] = 'Error, Please Try Again!';
-                    }
-                } else {
-                    http_response_code(401);
-                }
-            } else {
-                http_response_code(401);
-            }
-
-            break;
-
-        case 'updatePassword':
             if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
                 $id = $_POST['id'];
                 $password = $_POST['password'];
+
 
                 $save = new UserHandler();
                 $result = $save->updatePassword($id, $password);
@@ -412,6 +255,35 @@ if (isset($_GET['call'])) {
                     $response['error'] = true;
                     $response['response'] = 'Something went wrong! Please try again';
                 }
+
+
+            } else {
+                $response['error'] = true;
+                $response['response'] = 'Error, Please Try Again!';
+            }
+
+            break;
+            
+            case 'updateUniqueId':
+
+            if ($_SERVER['REQUEST_METHOD'] == "POST") {
+
+                $id = $_POST['id'];
+                $unique_id = $_POST['unique_id'];
+
+
+                $save = new UserHandler();
+                $result = $save->updateUniqueId($id, $unique_id);
+
+                if ($result == "updated") {
+                    $response['error'] = false;
+                    $response['response'] = 'Updated Successfully!';
+                } else {
+                    $response['error'] = true;
+                    $response['response'] = 'Something went wrong!';
+                }
+
+
             } else {
                 $response['error'] = true;
                 $response['response'] = 'Error, Please Try Again!';
@@ -420,126 +292,88 @@ if (isset($_GET['call'])) {
             break;
 
         case 'updateProfileImage':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                if ($isTokenValid) {
-                    if (isset($_POST['id']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-                        $db = new UserHandler();
+            if (isset($_POST['id']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+                $db = new UserHandler();
 
-                        $id = $_POST['id'];
-                        $file = $_FILES['file']['tmp_name'];
+                $id = $_POST['id'];
+                $file = $_FILES['file']['tmp_name'];
 
-                        $fileExt = getFileExtension($_FILES['file']['name']);
+                $fileExt = getFileExtension($_FILES['file']['name']);
 
-                        $result = $db->updateProfileImage($id, $file, $fileExt);
+                $result = $db->updateProfileImage($id, $file, $fileExt);
 
 
-                        if ($result == "updated") {
-                            $response['error'] = false;
-                            $response['response'] = 'Updated Successfully!';
-                        } else {
-                            $response['error'] = true;
-                            $response['response'] = 'Something went wrong!';
-                        }
-
-
-                    } else {
-                        $id = $_POST['id'];
-                        $file = $_FILES['file']['tmp_name'];
-                        $response['error'] = true;
-                        $response['response'] = 'Error, Please Try Again!';
-                    }
+                if ($result == "updated") {
+                    $response['error'] = false;
+                    $response['response'] = 'Updated Successfully!';
                 } else {
-                    http_response_code(401);
+                    $response['error'] = true;
+                    $response['response'] = 'Something went wrong!';
                 }
+
+
             } else {
-                http_response_code(401);
+                $id = $_POST['id'];
+                $file = $_FILES['file']['tmp_name'];
+                $response['error'] = true;
+                $response['response'] = 'Error, Please Try Again!';
             }
 
             break;
-
+            
         case 'updateAccountStatus':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
 
-                if ($isTokenValid) {
-                    if ($_SERVER['REQUEST_METHOD'] == "POST") {
+            if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
-                        $id = $_POST['id'];
-                        $account_status = $_POST['account_status'];
-                        $account_valid_from = $_POST['account_valid_from'];
-                        $account_valid_until = $_POST['account_valid_until'];
+                $id = $_POST['id'];
+                $account_status = $_POST['account_status'];
+                $account_valid_from = $_POST['account_valid_from'];
+                $account_valid_until = $_POST['account_valid_until'];
 
-                        $save = new UserHandler();
-                        $result = $save->updateAccountStatus($id, $account_status, $account_valid_from, $account_valid_until);
+                $save = new UserHandler();
+                $result = $save->updateAccountStatus($id, $account_status, $account_valid_from, $account_valid_until);
 
-                        if ($result == "updated") {
-                            $response['error'] = false;
-                            $response['response'] = 'Updated Successfully!';
-                        } else {
-                            $response['error'] = true;
-                            $response['response'] = 'Something went wrong!';
-                        }
-
-
-                    } else {
-                        $response['error'] = true;
-                        $response['response'] = 'Error, Please Try Again!';
-                    }
+                if ($result == "updated") {
+                    $response['error'] = false;
+                    $response['response'] = 'Updated Successfully!';
                 } else {
-                    http_response_code(401);
+                    $response['error'] = true;
+                    $response['response'] = 'Something went wrong!';
                 }
+
+
             } else {
-                http_response_code(401);
+                $response['error'] = true;
+                $response['response'] = 'Error, Please Try Again!';
             }
 
             break;
+            
+            case 'updateAccountStatusValue':
 
-        case 'updateAccountStatusValue':
-            $headers = getallheaders();
-            $jwtToken = isset($headers["Authorization"]) ? $headers["Authorization"] : null;
-            //$jwtToken=$_SERVER['HTTP_AUTHORIZATION'];
-            if ($jwtToken) {
-                $tokenHandler = new TokenHandler();
-                $isTokenValid = $tokenHandler->validateJWT($jwtToken);
+            if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
-                if ($isTokenValid) {
-                    if ($_SERVER['REQUEST_METHOD'] == "POST") {
+                $id = $_POST['id'];
+                $account_status = $_POST['account_status'];
 
-                        $id = $_POST['id'];
-                        $account_status = $_POST['account_status'];
+                $save = new UserHandler();
+                $result = $save->updateAccountStatusValue($id,$account_status);
 
-                        $save = new UserHandler();
-                        $result = $save->updateAccountStatusValue($id, $account_status);
-
-                        if ($result == "updated") {
-                            $response['error'] = false;
-                            $response['response'] = 'Updated Successfully!';
-                        } else {
-                            $response['error'] = true;
-                            $response['response'] = 'Something went wrong!';
-                        }
-
-
-                    } else {
-                        $response['error'] = true;
-                        $response['response'] = 'Error, Please Try Again!';
-                    }
+                if ($result == "updated") {
+                    $response['error'] = false;
+                    $response['response'] = 'Updated Successfully!';
                 } else {
-                    http_response_code(401);
+                    $response['error'] = true;
+                    $response['response'] = 'Something went wrong!';
                 }
+
+
             } else {
-                http_response_code(401);
+                $response['error'] = true;
+                $response['response'] = 'Error, Please Try Again!';
             }
+
             break;
     }
 }
@@ -551,3 +385,5 @@ function getFileExtension($file)
 }
 
 echo json_encode($response);
+
+?>

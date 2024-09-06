@@ -2,18 +2,23 @@
 
 require_once dirname(__FILE__) . '/MySqliStmt.php';
 
-class CategoryHandler{
+class CategoryHandler
+{
+ 
     private $con;
  
-    public function __construct(){
+    public function __construct()
+    {
         require_once dirname(__FILE__) . '/DbConnect.php';
         date_default_timezone_set('Asia/Dhaka');
  
         $db = new DbConnect();
         $this->con = $db->connect();
+        
     }
  
-    public function createCategoryWithFile($file, $extension,$category_data){
+    public function createCategoryWithFile($file, $extension,$category_data)
+    {
         $name=$category_data['name'];
         $parent_cat_id=$category_data['parent_cat_id'];
         $type=$category_data['type'];
@@ -23,8 +28,9 @@ class CategoryHandler{
         
         move_uploaded_file($file, $filedest);
  
-        $image_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/api/v2/uploads/images/".$category_image;
-
+        $image_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/api/v1/uploads/images/".$category_image;
+        
+        
         $now = new DateTime();
         $created_at= $now->format("d M, Y h:i A");
         $updated_at=$created_at;
@@ -38,10 +44,12 @@ class CategoryHandler{
             
             return $category_data;
         }
+            
         return "error";
     }
 
-    public function createCategory($category_data){
+    public function createCategory($category_data)
+    {
         $name=$category_data['name'];
         $parent_cat_id=$category_data['parent_cat_id'];
         $type=$category_data['type'];
@@ -60,10 +68,13 @@ class CategoryHandler{
 
             return $category_data;
         }
+
         return "error";
     }
 
-    public function getAllCategory(){
+    public function getAllCategory()
+    {
+
         $stmt = $this->con->prepare("SELECT * FROM category ORDER BY name ASC");
         $stmt->execute();
         //$result = $stmt -> get_result();
@@ -82,7 +93,9 @@ class CategoryHandler{
         return $categories;
     }
 
-    public function getAllMainCategory(){
+    public function getAllMainCategory()
+    {
+        
         $stmt = $this->con->prepare("SELECT * FROM category WHERE type=1 ORDER BY id DESC");
         $stmt->execute();
         //$result = $stmt -> get_result();
@@ -101,7 +114,9 @@ class CategoryHandler{
         return $categories;
     }
 
-    public function getAllParentCategory($sub_cat_id){
+    public function getAllParentCategory($sub_cat_id)
+    {
+
         $stmt = $this->con->prepare("SELECT * FROM category WHERE parent_cat_id=? ORDER BY name ASC");
         $stmt->bind_param("i", $parent_cat_id);
         $stmt->execute();
@@ -121,7 +136,9 @@ class CategoryHandler{
         return $categories;
     }
 
-    public function getAllSubCategoryById($parent_cat_id){
+    public function getAllSubCategoryById($parent_cat_id)
+    {
+        
         $stmt = $this->con->prepare("SELECT * FROM category WHERE parent_cat_id=? ORDER BY name ASC");
         $stmt->bind_param("i", $parent_cat_id);
         $stmt->execute();
@@ -140,8 +157,10 @@ class CategoryHandler{
  
         return $categories;
     }
-
-    public function getCategoryById($id){
+    
+    
+    public function getCategoryById($id)
+    {
         
         $stmt = $this->con->prepare("SELECT * FROM category WHERE id=? ORDER BY id ASC");
         $stmt->bind_param("i", $id);
@@ -161,8 +180,11 @@ class CategoryHandler{
  
         return $categories;
     }
-
-   public function getAllSubCategory(){
+    
+    
+   public function getAllSubCategory()
+    {
+        
         $stmt = $this->con->prepare("SELECT * FROM category WHERE type=2  ORDER BY name ASC");
         $stmt->execute();
  
@@ -179,15 +201,18 @@ class CategoryHandler{
  
         return $categories;
     }
-
-    public function updateCategoryWithFile($file, $extension,$category_data){
+    
+    
+    public function updateCategoryWithFile($file, $extension,$category_data)
+    {
         $category_image = round(microtime(true) * 1000) . '.' . $extension;
         $filedest = dirname(__FILE__) . IMAGES_UPLOAD_PATH . $category_image;
         
         move_uploaded_file($file, $filedest);
  
-        $image_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/api/v2/uploads/images/".$category_image;
-
+        $image_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/api/v1/uploads/images/".$category_image;
+        
+     
         $id=$category_data['id'];
         $name=$category_data['name'];
         $parent_cat_id=$category_data['parent_cat_id'];
@@ -212,8 +237,11 @@ class CategoryHandler{
             
         return "error";
     }
-
-    public function updateCategory($category_data){
+    
+    
+    public function updateCategory($category_data)
+    {
+        
         $id=$category_data['id'];
         $name=$category_data['name'];
         $parent_cat_id=$category_data['parent_cat_id'];
@@ -231,10 +259,14 @@ class CategoryHandler{
             
             return $category_data;
         }
+            
         return "error";
     }
-
-    public function deleteCategory($id,$image_url){
+    
+    
+    
+    public function deleteCategory($id,$image_url)
+    {
         $parts=explode("images/",$image_url);
         $image=$parts[1];
         
@@ -251,3 +283,5 @@ class CategoryHandler{
         }
     }
 }
+
+?>
